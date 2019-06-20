@@ -1,3 +1,4 @@
+
 /*******************************************************************************
  * Copyright (c) 2012, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -43,7 +44,7 @@ import com.ibm.wsspi.security.auth.callback.WSMappingCallbackHandler;
  * The AuthDataService is the interface to obtain the subject for an auth data alias.
  * The subject is optimized.
  * The concurrent access to the auth data config objects is protected by read and write locks for efficiency.
- * 
+ *
  * NOTE: Caching of subjects was removed under defect 63520, due to the following two reasons
  * which we could not address in the GA timeframe:
  * 1) ManagedConnectionFactory on the PasswordCredential is used to compare which PasswordCredentials are relevant to
@@ -117,7 +118,7 @@ public class AuthDataServiceImpl implements AuthDataService {
 
     private Subject createSubjectUsingJAAS(String jaasEntryName, ManagedConnectionFactory managedConnectionFactory, Map<String, Object> loginData) throws LoginException {
         CallbackHandler callbackHandler = new WSMappingCallbackHandler(loginData, managedConnectionFactory);
-	// NOTE: Do NOT add a doPriv here -- users must explicitly grant authority to user-defined login modules
+        // NOTE: Do NOT add a doPriv here -- users must explicitly grant authority to user-defined login modules
         LoginContext loginContext = new LoginContext(jaasEntryName, callbackHandler);
         loginContext.login();
         Subject subject = loginContext.getSubject();
@@ -137,7 +138,7 @@ public class AuthDataServiceImpl implements AuthDataService {
 
     /**
      * Gets the auth data for the specified auth data alias.
-     * 
+     *
      * @param authDataAlias the auth data alias representing the auth data entry in the configuration.
      * @return the auth data.
      */
@@ -148,7 +149,7 @@ public class AuthDataServiceImpl implements AuthDataService {
 
     private Subject obtainSubject(ManagedConnectionFactory managedConnectionFactory, AuthData authData) {
         Subject subject = createSubject(managedConnectionFactory, authData);
-        addInvocationSubjectPrincipal(subject);
+        //addInvocationSubjectPrincipal(subject);
         optimize(subject);
         return subject;
     }
