@@ -308,6 +308,7 @@ public class WebAppSecurityCollaboratorImpl implements IWebAppSecurityCollaborat
     }
 
     protected void unsetJaccService(ServiceReference<JaccService> ref) {
+        System.out.println("Junk!");
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "disabling JACC service");
         }
