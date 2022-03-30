@@ -85,7 +85,7 @@ class LTPAKeyCreateTask implements Runnable {
      */
     void createRequiredCollaborators() throws Exception {
         config.setLTPAKeyInfoManager(getPreparedLtpaKeyInfoManager());
-        config.setTokenFactory(getTokenFactory());
+        //config.setTokenFactory(getTokenFactory());
     }
 
     /** {@inheritDoc} */

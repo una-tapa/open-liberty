@@ -55,10 +55,14 @@ public class LTPAKeyInfoManager {
     private static final String SECRETKEY = "secretkey";
     private static final String PRIVATEKEY = "privatekey";
     private static final String PUBLICKEY = "publickey";
+    private static final String ENCRYPTOR = "encryptor";
+    private static final String SECRETKEYENCODED = "secretkeyEncoded";
+    private static final String PRIVATEKEYENCODED = "privatekeyEncoded";
 
     private final List<String> importFileCache = new ArrayList<String>();
     private final Map<String, byte[]> keyCache = new Hashtable<String, byte[]>();
     private final Map<String, String> realmCache = new Hashtable<String, String>();
+    private final Map<String, Object> ltpaDelayCache = new Hashtable<String, Object>();
 
     /**
      * Load the contents of the properties file.
@@ -125,17 +129,23 @@ public class LTPAKeyInfoManager {
             String privateKeyStr = props.getProperty(LTPAKeyFileUtility.KEYIMPORT_PRIVATEKEY);
             String publicKeyStr = props.getProperty(LTPAKeyFileUtility.KEYIMPORT_PUBLICKEY);
 
-            byte[] secretKey, privateKey, publicKey;
+            byte[] secretKey = null;
+            byte[] privateKey = null;
+            byte[] publicKey = null;
+            byte[] secretKeyEncoded, privateKeyEncoded = null;
+
+            KeyEncryptor encryptor = null;
             try {
-                KeyEncryptor encryptor = new KeyEncryptor(keyPassword);
+                encryptor = new KeyEncryptor(keyPassword);
                 // Secret key
                 if ((secretKeyStr == null) || (secretKeyStr.length() == 0)) {
                     Tr.error(tc, "LTPA_TOKEN_SERVICE_MISSING_KEY", LTPAKeyFileUtility.KEYIMPORT_SECRETKEY);
                     String formattedMessage = Tr.formatMessage(tc, "LTPA_TOKEN_SERVICE_MISSING_KEY", LTPAKeyFileUtility.KEYIMPORT_SECRETKEY);
                     throw new IllegalArgumentException(formattedMessage);
                 } else {
-                    byte[] keyEncoded = Base64Coder.base64DecodeString(secretKeyStr);
-                    secretKey = encryptor.decrypt(keyEncoded);
+                    secretKeyEncoded = Base64Coder.base64DecodeString(secretKeyStr);
+                    System.out.println("secretKey decrypt skipped");
+                    //secretKey = encryptor.decrypt(keyEncoded);
                 }
                 // Private key
                 if ((privateKeyStr == null) || (privateKeyStr.length() == 0)) {
@@ -143,8 +153,9 @@ public class LTPAKeyInfoManager {
                     String formattedMessage = Tr.formatMessage(tc, "LTPA_TOKEN_SERVICE_MISSING_KEY", LTPAKeyFileUtility.KEYIMPORT_PRIVATEKEY);
                     throw new IllegalArgumentException(formattedMessage);
                 } else {
-                    byte[] keyEncoded = Base64Coder.base64DecodeString(privateKeyStr);
-                    privateKey = encryptor.decrypt(keyEncoded);
+                    privateKeyEncoded = Base64Coder.base64DecodeString(privateKeyStr);
+                    System.out.println("privateKey decrypt skipped");
+                    //privateKey = encryptor.decrypt(keyEncoded);
                 }
                 // Public key
                 if ((publicKeyStr == null) || (publicKeyStr.length() == 0)) {
@@ -162,19 +173,30 @@ public class LTPAKeyInfoManager {
                 throw e;
             }
 
-            if (secretKey != null) {
-                this.keyCache.put(keyImportFile + SECRETKEY, secretKey);
+            try {
+                if (secretKey != null) {
+                    this.keyCache.put(keyImportFile + SECRETKEY, secretKey);
+                } else {
+                    this.ltpaDelayCache.put(keyImportFile + ENCRYPTOR, encryptor);
+                    this.ltpaDelayCache.put(keyImportFile + SECRETKEYENCODED, secretKeyEncoded);
+                }
+                if (privateKey != null) {
+                    this.keyCache.put(keyImportFile + PRIVATEKEY, privateKey);
+                } else {
+                    this.ltpaDelayCache.put(keyImportFile + ENCRYPTOR, encryptor);
+                    this.ltpaDelayCache.put(keyImportFile + PRIVATEKEYENCODED, privateKeyEncoded);
+
+                }
+                if (publicKey != null) {
+                    this.keyCache.put(keyImportFile + PUBLICKEY, publicKey);
+                }
+                if (realm != null) {
+                    this.realmCache.put(keyImportFile, realm);
+                }
+                this.importFileCache.add(keyImportFile);
+            } catch (Exception e) {
+                System.out.println("DEBUG: Error!");
             }
-            if (privateKey != null) {
-                this.keyCache.put(keyImportFile + PRIVATEKEY, privateKey);
-            }
-            if (publicKey != null) {
-                this.keyCache.put(keyImportFile + PUBLICKEY, publicKey);
-            }
-            if (realm != null) {
-                this.realmCache.put(keyImportFile, realm);
-            }
-            this.importFileCache.add(keyImportFile);
         }
     }
 
@@ -205,7 +227,21 @@ public class LTPAKeyInfoManager {
      */
     @Sensitive
     public final byte[] getSecretKey(String keyImportFile) {
-        return this.keyCache.get(keyImportFile + SECRETKEY);
+        byte[] secretKey = null;
+        if (this.keyCache.get(keyImportFile + SECRETKEY) != null) {
+            secretKey = this.keyCache.get(keyImportFile + SECRETKEY);
+        } else {
+            System.out.println("DEBUG: SecretKey creation delayed.");
+            KeyEncryptor encryptor = (KeyEncryptor) ltpaDelayCache.get(keyImportFile + ENCRYPTOR);
+            byte[] keyEncoded = (byte[]) ltpaDelayCache.get(keyImportFile + SECRETKEYENCODED);
+            try {
+                secretKey = encryptor.decrypt(keyEncoded);
+                this.keyCache.put(keyImportFile + SECRETKEY, secretKey);
+            } catch (Exception e) {
+                System.out.println("Ouch");
+            }
+        }
+        return secretKey;
     }
 
     /**
@@ -217,7 +253,21 @@ public class LTPAKeyInfoManager {
      */
     @Sensitive
     public final byte[] getPrivateKey(String keyImportFile) {
-        return this.keyCache.get(keyImportFile + PRIVATEKEY);
+        byte[] privateKey = null;
+        if (this.keyCache.get(keyImportFile + PRIVATEKEY) != null) {
+            privateKey = this.keyCache.get(keyImportFile + PRIVATEKEY);
+        } else {
+            System.out.println("DEBUG: PrivateKey creation delayed.");
+            KeyEncryptor encryptor = (KeyEncryptor) ltpaDelayCache.get(keyImportFile + ENCRYPTOR);
+            byte[] keyEncoded = (byte[]) ltpaDelayCache.get(keyImportFile + PRIVATEKEYENCODED);
+            try {
+                privateKey = encryptor.decrypt(keyEncoded);
+                this.keyCache.put(keyImportFile + PRIVATEKEY, privateKey);
+            } catch (Exception e) {
+                System.out.println("Ouch");
+            }
+        }
+        return privateKey;
     }
 
     /**
