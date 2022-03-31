@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.ibm.ws.security.token.ltpa.internal;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.service.component.ComponentContext;
@@ -17,8 +18,11 @@ import org.osgi.service.component.ComponentContext;
 import com.ibm.websphere.security.auth.InvalidTokenException;
 import com.ibm.websphere.security.auth.TokenCreationFailedException;
 import com.ibm.websphere.security.auth.TokenExpiredException;
+import com.ibm.ws.crypto.ltpakeyutil.LTPAPrivateKey;
+import com.ibm.ws.crypto.ltpakeyutil.LTPAPublicKey;
 import com.ibm.ws.security.token.TokenService;
 import com.ibm.ws.security.token.ltpa.LTPAConfiguration;
+import com.ibm.ws.security.token.ltpa.LTPAKeyInfoManager;
 import com.ibm.wsspi.security.ltpa.Token;
 import com.ibm.wsspi.security.ltpa.TokenFactory;
 
@@ -38,9 +42,45 @@ public class LTPATokenService implements TokenService {
         }
     }
 
-    protected void activate(ComponentContext context) {}
+    protected void activate(ComponentContext context) {
+    }
 
-    protected void deactivate(ComponentContext context) {}
+    protected void deactivate(ComponentContext context) {
+    }
+
+    private Map<String, Object> createTokenFactoryMap() {
+        //LTPAKeyInfoManager keyInfoManager = config.getLTPAKeyInfoManager();
+        LTPAKeyInfoManager keyInfoManager = ltpaConfig.getLTPAKeyInfoManager();
+        LTPAPrivateKey ltpaPrivateKey = new LTPAPrivateKey(keyInfoManager.getPrivateKey(ltpaConfig.getKeyFile()));
+        LTPAPublicKey ltpaPublicKey = new LTPAPublicKey(keyInfoManager.getPublicKey(ltpaConfig.getKeyFile()));
+        byte[] sharedKey = keyInfoManager.getSecretKey(ltpaConfig.getKeyFile());
+
+        Map<String, Object> tokenFactoryMap = new HashMap<String, Object>();
+        tokenFactoryMap.put(LTPAConstants.EXPIRATION, ltpaConfig.getTokenExpiration());
+        tokenFactoryMap.put(LTPAConstants.SECRET_KEY, sharedKey);
+        tokenFactoryMap.put(LTPAConstants.PUBLIC_KEY, ltpaPublicKey);
+        tokenFactoryMap.put(LTPAConstants.PRIVATE_KEY, ltpaPrivateKey);
+        return tokenFactoryMap;
+    }
+
+    private TokenFactory getTokenFactory() {
+
+        TokenFactory tokenFactory = null;
+        tokenFactory = ltpaConfig.getTokenFactory();
+        if (tokenFactory != null) {
+            return ltpaConfig.getTokenFactory();
+        } else {
+            Map<String, Object> tokenFactoryMap = createTokenFactoryMap();
+            tokenFactory = new LTPAToken2Factory();
+            tokenFactory.initialize(tokenFactoryMap);
+        }
+        return tokenFactory;
+    }
+
+    private void delayedInit() {
+        System.out.println("DEBUG: Delayed TokenFactory Initialization");
+        ltpaConfig.setTokenFactory(getTokenFactory());
+    }
 
     /**
      * {@inheritDoc}
@@ -49,6 +89,7 @@ public class LTPATokenService implements TokenService {
      */
     @Override
     public Token createToken(Map<String, Object> tokenData) throws TokenCreationFailedException {
+        delayedInit();
         TokenFactory tokenFactory = ltpaConfig.getTokenFactory();
         return tokenFactory.createToken(tokenData);
     }

@@ -299,7 +299,8 @@ public class LTPAConfigurationImpl implements LTPAConfiguration, FileBasedAction
      *
      * @param factory TokenFactory which corresponds to this configuration
      */
-    void setTokenFactory(TokenFactory factory) {
+    @Override
+    public void setTokenFactory(TokenFactory factory) {
         writeLock.lock();
         try {
             this.factory = factory;

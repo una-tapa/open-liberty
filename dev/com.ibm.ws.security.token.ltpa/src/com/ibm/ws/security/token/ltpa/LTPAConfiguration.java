@@ -41,7 +41,12 @@ public interface LTPAConfiguration {
     /**
      * @return TokenFactory instance corresponding to this LTPA configuration
      */
-    TokenFactory getTokenFactory();
+    public TokenFactory getTokenFactory();
+
+    /**
+     * @return TokenFactory instance corresponding to this LTPA configuration
+     */
+    public void setTokenFactory(TokenFactory tf);
 
     /**
      * @return LTPAKeyInfoManager instance corresponding to this LTPA configuration
