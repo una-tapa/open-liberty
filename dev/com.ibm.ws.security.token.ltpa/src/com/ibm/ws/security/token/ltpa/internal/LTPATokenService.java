@@ -99,6 +99,7 @@ public class LTPATokenService implements TokenService {
      */
     @Override
     public Token recreateTokenFromBytes(byte[] tokenBytes) throws InvalidTokenException, TokenExpiredException {
+        delayedInit();
         TokenFactory tokenFactory = ltpaConfig.getTokenFactory();
         Token token = tokenFactory.validateTokenBytes(tokenBytes);
         validateRecreatedToken(token);
@@ -110,6 +111,7 @@ public class LTPATokenService implements TokenService {
      */
     @Override
     public Token recreateTokenFromBytes(byte[] tokenBytes, String... removeAttributes) throws InvalidTokenException, TokenExpiredException {
+        delayedInit();
         TokenFactory tokenFactory = ltpaConfig.getTokenFactory();
         Token token = tokenFactory.validateTokenBytes(tokenBytes, removeAttributes);
         return token;
