@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 IBM Corporation and others.
+ * Copyright (c) 2013, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -23,16 +23,15 @@ import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
-import com.ibm.wsspi.rest.handler.RESTRequest;
-
 /**
  * Implementation of RESTRequest that uses an HttpServletRequest object.
  */
-public class ServletRESTRequestImpl implements RESTRequest {
+public class LibertyServletRESTRequestImpl implements LibertyServletRESTRequest {
 
     private final HttpServletRequest request;
 
@@ -44,7 +43,7 @@ public class ServletRESTRequestImpl implements RESTRequest {
      *
      * @param response The request to wrap.
      */
-    public ServletRESTRequestImpl(HttpServletRequest request) {
+    public LibertyServletRESTRequestImpl(HttpServletRequest request) {
         this.request = request;
         try {
             this.request.setCharacterEncoding("UTF-8");
@@ -227,6 +226,11 @@ public class ServletRESTRequestImpl implements RESTRequest {
     @Override
     public String getSessionId() {
         return request.getSession().getId();
+    }
+
+    @Override
+    public HttpSession getSession() {
+        return request.getSession();
     }
 
 }

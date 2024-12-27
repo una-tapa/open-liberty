@@ -17,10 +17,13 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Map;
 
+import javax.servlet.http.HttpSession;
+
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.security.audit.AuditConstants;
 import com.ibm.websphere.security.audit.AuditEvent;
+import com.ibm.ws.rest.handler.helper.LibertyServletRESTRequest;
 import com.ibm.ws.security.audit.source.utils.AuditUtils;
 import com.ibm.wsspi.rest.handler.RESTRequest;
 import com.ibm.wsspi.rest.handler.RESTResponse;
@@ -69,7 +72,15 @@ public class RESTAuthorizationEvent extends AuditEvent {
             if (req.getUserPrincipal() != null && req.getUserPrincipal().getName() != null)
                 set(AuditEvent.TARGET_CREDENTIAL_TOKEN, req.getUserPrincipal().getName());
             set(AuditEvent.TARGET_METHOD, req.getMethod());
-            String sessionID = req.getSessionId();
+
+			String sessionID = null;
+			if (System.getProperty("temp").equalsIgnoreCase("audit")) {
+				sessionID = req.getSessionId();
+			} else {
+				HttpSession session = ((LibertyServletRESTRequest) request).getSession(false);
+				sessionID = session == null ? null : session.getId();
+			}
+
             if (sessionID != null) {
                 set(AuditEvent.TARGET_SESSION, sessionID);
             }
