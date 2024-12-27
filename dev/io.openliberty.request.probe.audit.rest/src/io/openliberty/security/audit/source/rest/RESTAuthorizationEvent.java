@@ -17,8 +17,6 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Map;
 
-import javax.servlet.http.HttpSession;
-
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.security.audit.AuditConstants;
@@ -77,8 +75,7 @@ public class RESTAuthorizationEvent extends AuditEvent {
 			if (System.getProperty("temp").equalsIgnoreCase("audit")) {
 				sessionID = req.getSessionId();
 			} else {
-				HttpSession session = ((LibertyServletRESTRequest) request).getSession(false);
-				sessionID = session == null ? null : session.getId();
+				sessionID = ((LibertyServletRESTRequest) request).getSessionForAudit();
 			}
 
             if (sessionID != null) {

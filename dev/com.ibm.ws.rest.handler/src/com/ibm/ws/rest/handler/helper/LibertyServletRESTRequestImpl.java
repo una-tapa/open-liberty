@@ -233,4 +233,10 @@ public class LibertyServletRESTRequestImpl implements LibertyServletRESTRequest 
         return request.getSession();
     }
 
+    @Override
+    public String getSessionForAudit() {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : request.getSession().getId();
+    }
+
 }

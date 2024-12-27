@@ -28,4 +28,11 @@ public interface LibertyServletRESTRequest extends RESTRequest {
      */
     public HttpSession getSession();
 
+    /**
+     * Gets the session ID of the request
+     *
+     * @return String sessionID a String specifying the sessionID of the HTTP request
+     */
+    public String getSessionForAudit();
+
 }
